@@ -1,0 +1,312 @@
+---
+title: "Better Reporting"
+author: "Eric"
+date: "February 19, 2018"
+output: html_document
+theme: "yeti"
+---
+
+```{r setup, include=FALSE, message=F, warning=F}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(magrittr)
+library(purrr)
+library(stringr)
+library(RMySQL)
+library(pander)
+```
+
+## Create more elegant reports for your clients
+
+We will write code to get you the data you need - then automate reporting tasks like summaries, plots, lists and make them downloadable for you clients
+
+```{r database}
+
+#establish database connection
+  con <-
+    dbConnect(
+      RMySQL::MySQL(),
+      host = "mysql.query.s44",
+      username = "elessert",
+      password = .elessert_pass,
+      port = 3306,
+      dbname = "s44_prod_eden"
+    )
+  #get the data from SQL
+  
+  LoginData <-
+    dbGetQuery(
+      con,
+      "select c.name, u.company_id, u.job_title, u.first_name, u.last_name, u.total_logins, u.last_login
+      from user u
+      join company c
+      on u.company_id = c.id
+      where u.first_name not like '%s44%'
+      and u.first_name not like '%test%'
+      and u.last_name not like '%s44%'
+      and u.first_name not like '%task%'
+      and u.email_address not like '%@sourceintelligence%'
+      and u.email_address not like '%@s%44%'
+      and u.email_address like '%@%'
+      and u.company_id != 1
+      and u.total_logins not like '%null%'
+      order by total_logins asc;"
+    )
+  
+  LoginData %>% 
+    group_by(name) %>% 
+    mutate(logins = sum(total_logins)) %>%
+    arrange(desc(logins)) %>%
+    select(name, logins) %>% 
+    unique %>%
+    head(15) %>% pander
+  
+  cons <- dbListConnections(MySQL());lapply(cons, dbDisconnect);rm(cons)
+```
+
+## You don not have to include the code
+
+here is the same example without code
+```{r code, echo=F, message=F, warning=F}
+
+#establish database connection
+  con <-
+    dbConnect(
+      RMySQL::MySQL(),
+      host = "mysql.query.s44",
+      username = "elessert",
+      password = .elessert_pass,
+      port = 3306,
+      dbname = "s44_prod_eden"
+    )
+  #get the data from SQL
+  
+  LoginData <-
+    dbGetQuery(
+      con,
+      "select c.name, u.company_id, u.job_title, u.first_name, u.last_name, u.total_logins, u.last_login
+      from user u
+      join company c
+      on u.company_id = c.id
+      where u.first_name not like '%s44%'
+      and u.first_name not like '%test%'
+      and u.last_name not like '%s44%'
+      and u.first_name not like '%task%'
+      and u.email_address not like '%@sourceintelligence%'
+      and u.email_address not like '%@s%44%'
+      and u.email_address like '%@%'
+      and u.company_id != 1
+      and u.total_logins not like '%null%'
+      order by total_logins asc;"
+    )
+  
+  LoginData %>% 
+    group_by(name) %>% 
+    mutate(logins = sum(total_logins)) %>%
+    arrange(desc(logins)) %>%
+    select(name, logins) %>% 
+    unique %>%
+    head(15) %>% 
+    DT::datatable()
+  
+  cons <- dbListConnections(MySQL());lapply(cons, dbDisconnect);rm(cons)
+```
+
+## Including Plots
+
+Here is where we can really shine - customers can get plots that they could never make in Excel, for example:
+
+```{r pressure, echo=FALSE, fig.height = 8, fig.width= 7, fig.align="center"}
+
+LoginData$last_login %<>% str_split(., " ") %>% 
+    map_chr(`[`, 1) %>% 
+  lubridate::ymd()
+
+LoginData$dow <- LoginData$last_login %>% lubridate::wday(label = T)
+LoginData$year <- LoginData$last_login %>% lubridate::year()
+
+login_plot <- LoginData %>% group_by(company_id, year, dow) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  filter(year != 2011)
+
+login_plot %>% 
+  ungroup() %>% 
+  ggplot(aes(x = dow, y = n)) + geom_bar(stat = "identity", aes(fill = year)) +
+  scale_x_discrete(limits = rev(levels(login_plot$dow)))+
+  facet_grid(year ~.)+
+  theme_light() +
+    theme(legend.position = "none")+
+  labs(title = "Logins by day of the week", x = "", y = "") +
+  coord_flip()
+
+
+```
+
+Note that we can also create presentation ready graphs for the customer contacts that need them for their internal reports
+
+## We can do simple lists as well - like a report of who has not yet completed a task by tags
+
+```{r, echo=F, message=F, warning=F}
+
+cons <-
+  dbListConnections(MySQL())
+  lapply(cons, dbDisconnect)
+  con <-
+  dbConnect(
+  RMySQL::MySQL(),
+  host = "mysql.query.s44",
+  username = 'elessert',
+  password = .elessert_pass,
+  port = 3306,
+  dbname = 's44_prod_eden'
+  )
+  dbGetQuery(con, "SET NAMES utf8")
+  
+
+  tag <- dbGetQuery(
+    con,
+    "SELECT distinct c.name as 'supplier_name',
+    q.name as 'customer_name',
+    ct.type as 'scope',
+    ct.value as 'scope_answer'
+    FROM
+    company_tag ct
+    join company c on
+    c.id = ct.to_company_id
+    join company q
+    on q.id = ct.from_company_id
+    WHERE
+    from_company_id IN
+    (
+    25571,
+    258099,
+    258098,
+    258097,
+    258096,
+    258095,
+    220741,
+    237636,
+    237351,
+    258084,
+    258083,
+    258085,
+    258381,
+    258380,
+    258379
+    )
+    and (ct.type like '%In Scope%'
+    or ct.type like '%Vendor ID%')"
+  )
+
+  repo <- dbGetQuery(
+    con,
+    "select cr.updated_at as 'submitted_date', vw.customer_name, tca.*
+    from sqladmin.tmp_classification_amazon tca
+    join sqladmin.cmrt_vw_sqladmin vw
+    on vw.response_id = tca.response_id
+    join cmrt_response cr
+    on cr.id = vw.response_id;"
+  )
+
+    repo %<>% merge(tag,
+                  by = c("customer_name", "supplier_name"),
+                  all = T)
+    
+  
+  repo_summary <- repo %>% filter(supplier_name != "Primax Electronics Ltd") %>% 
+    spread(scope, scope_answer, fill = "No") %>% 
+    select(-`<NA>`) %>% 
+    select(customer_name, supplier_name, submitted_date, `2017 In Scope`, `2016 In Scope`,`Vendor ID`)
+  
+  not_done <- is.na(repo_summary$submitted_date)
+  repo_summary$submitted_date[not_done] <- "Not Complete"
+   
+  repo_table <- repo %>% mutate(complete = ifelse(is.na(submitted_date), "not_compete", "complete")) %>%
+     filter(scope == '2017 In Scope' | scope == '2016 In Scope') %>% 
+     group_by(customer_name, scope, complete) %>% 
+     tally %>%
+     arrange(desc(n)) %>% 
+     spread(complete, n, fill = 0) 
+   
+   repo_table$customer_name <-  paste0("Customer-Placeholder-", LETTERS[1:nrow(repo_table)])
+   repo_table %>% DT::datatable()
+   
+      repo_summary$customer_name <-  paste0("Customer-placeholder", 1:nrow(repo_summary))
+      repo_summary$supplier_name <-  paste0("Supplier-Placeholder-", 1:nrow(repo_summary))
+
+   
+  repo_summary %>% 
+    DT::datatable(filter = "top")
+
+```
+
+##Other items that can help
+ * add links to videos
+ 
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=dQw4w9WgXcQ
+" target="_blank"><img src="http://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg" 
+alt="Rick-Roll" width="480" height="360" border="10" /></a>
+
+  * add custom branding to plots
+  
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=F}
+library(ggplot2)
+library(magick)
+library(here) # For making the script run without a wd
+library(magrittr) # For piping the logo
+
+# Make a simple plot and save it
+ggplot(mpg, aes(displ, hwy, colour = class)) +
+geom_point() +
+theme_light() +
+theme(legend.position = "none") +
+ggtitle("Cars") +
+ggsave(
+filename = paste0(here("/"), last_plot()$labels$title, ".png"),
+width = 7,
+height = 6,
+dpi = 300
+)
+
+# Call back the plot
+plot <- image_read(paste0(here("/"), "Cars.png"))
+# And bring in a logo
+logo_raw <-
+image_read("~/Documents/explore-reports/si_logo_small.png", strip = T)
+
+logo_raw
+
+# Scale down the logo and give it a border and annotation
+# This is the cool part because you can do a lot to the image/logo before adding it
+logo <- logo_raw %>%
+image_scale("200") %>%
+image_background("grey80", flatten = TRUE) %>%
+image_border("grey80", geometry = "200x10") %>%
+image_annotate(
+"Powered By Source Intelligence",
+color = "white",
+size = 12,
+# location = "",
+gravity = "southeast"
+)
+
+# Stack them on top of each other
+final_plot <-
+image_append(image_scale(c(plot, logo), geometry = "1600"), stack = TRUE)
+# And overwrite the plot without a logo
+
+final_plot
+
+```
+  
+  
+ * add links to other parts of the report
+ * add links to outside websites 
+ 
+ * add humor
+ _____
+ 
+ ![spongebob](https://raw.githubusercontent.com/haozhu233/giphyr/master/img/exciting_rDbelKPujYEBq.gif)
+
+![travolta](http://danielphadley.com/images/Cars_Travolta.gif)
