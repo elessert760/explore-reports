@@ -281,7 +281,6 @@ cons <-
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=F, fig.width= 8, fig.height=6}
 
 library(leaflet)
-
 m <- leaflet() %>%
   addTiles() %>%  # Add default OpenStreetMap map tiles
   addMarkers(lng=-117.292, lat=33.121, popup="Better Reports Start Here")
