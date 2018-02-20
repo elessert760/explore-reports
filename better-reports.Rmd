@@ -67,7 +67,6 @@ We will write code to get you the data you need - then automate reporting tasks 
     unique %>%
     head(15) %>% pander
   
-  cons <- dbListConnections(MySQL());lapply(cons, dbDisconnect);rm(cons)
 ```
 
 ## You do not have to include the code
@@ -114,8 +113,13 @@ here is the same example without code
     unique %>%
     head(15) %>% 
     DT::datatable()
+
+```
+
+```{r include=F}
   
   cons <- dbListConnections(MySQL());lapply(cons, dbDisconnect);rm(cons)
+
 ```
 
 ## Including Plots
@@ -324,8 +328,8 @@ logo <- logo_raw %>%
   image_border("#ff9200", "1000x100") %>%
   image_annotate("Powered By Source Intelligence", color = "white", size = 40, 
                  location = "+10+50", gravity = "southeast")
-logo %>% str()
-Plot %>% str()
+# logo %>% str()
+# Plot %>% str()
 # Stack them on top of each other
 final_plot <- image_append(image_scale(c(Plot, logo), "1400"), stack = TRUE)
 # And overwrite the plot without a logo
