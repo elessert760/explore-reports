@@ -2,10 +2,8 @@
 title: "Better Reporting"
 author: "Eric"
 date: "February 19, 2018"
-output:
-  html_document:
-    theme: yeti
-    highlight: tango
+output: html_document
+theme: yeti
 ---
 
 
@@ -162,8 +160,8 @@ logo_raw <- image_read("~/Documents/explore-reports/si_logo_small-squished.png")
 # This is the cool part because you can do a lot to the image/logo before adding it
 logo <- logo_raw %>%
   image_scale("400") %>% 
-  image_background("#6da852", flatten = TRUE) %>%
-  image_border("#6da852", "1200x20") %>%
+  image_background("#c3d3c0", flatten = TRUE) %>%
+  image_border("#c3d3c0", "1200x20") %>%
   image_annotate("Powered By Source Intelligence", color = "white", size = 40, 
                  location = "+10+50", gravity = "southeast")
 
@@ -344,7 +342,7 @@ final_plot
 ### add links to outside websites 
   [CLICK HERE to suggest an edit to this page!](https://github.com/elessert760/explore-reports/issues/)
   
-  On the internet people love to tell you when you are wrong! 
+  __On the internet people love to tell you when you are wrong!__ 
 
  
 ### add humor
