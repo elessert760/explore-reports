@@ -2,9 +2,12 @@
 title: "Better Reporting"
 author: "Eric"
 date: "February 19, 2018"
-output: html_document
-theme: "yeti"
+output:
+  html_document:
+    theme: yeti
+    highlight: tango
 ---
+
 
 ```{r setup, include=FALSE, message=F, warning=F}
 knitr::opts_chunk$set(echo = TRUE)
@@ -14,11 +17,16 @@ library(purrr)
 library(stringr)
 library(RMySQL)
 library(pander)
+library(here)
+library(ggplot2)
+library(magick)
 ```
 
 ## Create more elegant reports for your clients
 
 We will write code to get you the data you need - then automate reporting tasks like summaries, plots, lists and make them downloadable for you clients
+
+#Foo
 
 ```{r database}
 
@@ -64,7 +72,7 @@ We will write code to get you the data you need - then automate reporting tasks 
   cons <- dbListConnections(MySQL());lapply(cons, dbDisconnect);rm(cons)
 ```
 
-## You don not have to include the code
+## You do not have to include the code
 
 here is the same example without code
 ```{r code, echo=F, message=F, warning=F}
@@ -138,7 +146,34 @@ login_plot %>%
   theme_light() +
     theme(legend.position = "none")+
   labs(title = "Logins by day of the week", x = "", y = "") +
-  coord_flip()
+  coord_flip()+
+ggtitle("Login Data") +
+  ggsave(filename = paste0(here("/"), last_plot()$labels$title, ".png"),
+         width = 10, height = 7, dpi = 300)
+
+# Call back the plot
+plot <- image_read(paste0(here("/"), "Login Data.png"))
+# And bring in a logo
+logo_raw <- image_read("~/Documents/explore-reports/si_logo_small-squished.png")
+
+# logo_raw
+
+# Scale down the logo and give it a border and annotation
+# This is the cool part because you can do a lot to the image/logo before adding it
+logo <- logo_raw %>%
+  image_scale("400") %>% 
+  image_background("grey", flatten = TRUE) %>%
+  image_border("grey", "1200x20") %>%
+  image_annotate("Powered By Source Intelligence", color = "white", size = 40, 
+                 location = "+10+50", gravity = "southeast")
+
+# Stack them on top of each other
+final_plot <- image_append(image_scale(c(plot, logo), "1400"), stack = TRUE)
+# And overwrite the plot without a logo
+image_write(final_plot, paste0(here("/"), last_plot()$labels$title, ".png"))
+
+
+final_plot
 
 
 ```
@@ -229,7 +264,7 @@ cons <-
      arrange(desc(n)) %>% 
      spread(complete, n, fill = 0) 
    
-   repo_table$customer_name <-  paste0("Customer-Placeholder-", LETTERS[1:nrow(repo_table)])
+   repo_table$customer_name <-  paste0("Customer-Placeholder-", 1:nrow(repo_table))
    repo_table %>% DT::datatable()
    
       repo_summary$customer_name <-  paste0("Customer-placeholder", 1:nrow(repo_summary))
@@ -248,65 +283,58 @@ cons <-
 " target="_blank"><img src="http://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg" 
 alt="Rick-Roll" width="480" height="360" border="10" /></a>
 
-  * add custom branding to plots
+###add custom branding to plots
   
-```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=F}
-library(ggplot2)
-library(magick)
-library(here) # For making the script run without a wd
-library(magrittr) # For piping the logo
-
+```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=F, fig.width= 8, fig.height=8}
 # Make a simple plot and save it
-ggplot(mpg, aes(displ, hwy, colour = class)) +
-geom_point() +
-theme_light() +
-theme(legend.position = "none") +
-ggtitle("Cars") +
-ggsave(
-filename = paste0(here("/"), last_plot()$labels$title, ".png"),
-width = 7,
-height = 6,
-dpi = 300
-)
+p <- ggplot(mpg, aes(displ, hwy, colour = class)) + 
+  geom_point() + 
+  theme_light() +
+  theme(legend.position = "none")+
+  ggtitle("Cars") +
+  ggsave(filename = paste0(here("/"), last_plot()$labels$title, ".png"),
+         width = 10, height = 7, dpi = 300)
 
 # Call back the plot
 plot <- image_read(paste0(here("/"), "Cars.png"))
 # And bring in a logo
-logo_raw <-
-image_read("~/Documents/explore-reports/si_logo_small.png", strip = T)
+logo_raw <- image_read("~/Documents/explore-reports/si_logo_small-squished.png")
 
-logo_raw
+# logo_raw
 
 # Scale down the logo and give it a border and annotation
 # This is the cool part because you can do a lot to the image/logo before adding it
 logo <- logo_raw %>%
-image_scale("200") %>%
-image_background("grey80", flatten = TRUE) %>%
-image_border("grey80", geometry = "200x10") %>%
-image_annotate(
-"Powered By Source Intelligence",
-color = "white",
-size = 12,
-# location = "",
-gravity = "southeast"
-)
+  image_scale("400") %>% 
+  image_background("grey", flatten = TRUE) %>%
+  image_border("grey", "1200x20") %>%
+  image_annotate("Powered By Source Intelligence", color = "white", size = 40, 
+                 location = "+10+50", gravity = "southeast")
 
 # Stack them on top of each other
-final_plot <-
-image_append(image_scale(c(plot, logo), geometry = "1600"), stack = TRUE)
+final_plot <- image_append(image_scale(c(plot, logo), "1400"), stack = TRUE)
 # And overwrite the plot without a logo
+image_write(final_plot, paste0(here("/"), last_plot()$labels$title, ".png"))
+
 
 final_plot
 
 ```
   
   
- * add links to other parts of the report
- * add links to outside websites 
+### add links to other parts of the report
  
- * add humor
- _____
+ [Foo](#foo)
+
+### add links to outside websites 
+  [CLICK HERE to suggest an edit to this page!](https://github.com/elessert760/explore-reports/issues/)
+  
+  On the internet people love to tell you when you are wrong! 
+
+ 
+### add humor
  
  ![spongebob](https://raw.githubusercontent.com/haozhu233/giphyr/master/img/exciting_rDbelKPujYEBq.gif)
+ ![cats](/home/eric/Documents/explore-reports/img/cats_Ov5NiLVXT8JEc.gif)
 
 ![travolta](http://danielphadley.com/images/Cars_Travolta.gif)
