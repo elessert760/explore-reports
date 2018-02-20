@@ -159,6 +159,7 @@ logo_raw <- image_read("~/Documents/explore-reports/si_logo_small-squished.png")
 # Scale down the logo and give it a border and annotation
 # This is the cool part because you can do a lot to the image/logo before adding it
 logo <- logo_raw %>%
+  image_trim() %>% 
   image_scale("400") %>% 
   image_background("#c3d3c0", flatten = TRUE) %>%
   image_border("#c3d3c0", "1200x20") %>%
@@ -299,7 +300,7 @@ alt="Rick-Roll" width="480" height="360" border="10" /></a>
   
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE, echo=F, fig.width= 8, fig.height=8}
 # Make a simple plot and save it
-p <- ggplot(mpg, aes(displ, hwy, colour = class)) + 
+ggplot(mpg, aes(displ, hwy, colour = class)) + 
   geom_point() + 
   theme_light() +
   theme(legend.position = "none")+
@@ -308,7 +309,7 @@ p <- ggplot(mpg, aes(displ, hwy, colour = class)) +
          width = 10, height = 7, dpi = 300)
 
 # Call back the plot
-plot <- image_read(paste0(here("/"), "Cars.png"))
+Plot <- image_read(paste0(here("/"), "Cars.png"))
 # And bring in a logo
 logo_raw <- image_read("~/Documents/explore-reports/vertiv.png")
 
@@ -317,14 +318,16 @@ logo_raw <- image_read("~/Documents/explore-reports/vertiv.png")
 # Scale down the logo and give it a border and annotation
 # This is the cool part because you can do a lot to the image/logo before adding it
 logo <- logo_raw %>%
+  image_trim() %>% 
   image_scale("400") %>% 
   image_background("#ff9200", flatten = TRUE) %>%
   image_border("#ff9200", "1000x100") %>%
   image_annotate("Powered By Source Intelligence", color = "white", size = 40, 
                  location = "+10+50", gravity = "southeast")
-
+logo %>% str()
+Plot %>% str()
 # Stack them on top of each other
-final_plot <- image_append(image_scale(c(plot, logo), "1400"), stack = TRUE)
+final_plot <- image_append(image_scale(c(Plot, logo), "1400"), stack = TRUE)
 # And overwrite the plot without a logo
 image_write(final_plot, paste0(here("/"), last_plot()$labels$title, ".png"))
 
