@@ -375,3 +375,6 @@ final_plot
 [markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
 
 [Rmarkdown](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf)
+
+this line ends the file!
+
